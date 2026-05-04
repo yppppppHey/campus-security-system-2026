@@ -1,0 +1,471 @@
+{% extends "base.html" %}
+
+{% block title %}差分隐私查询 - 校园安全防护系统{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0"><i class="fa fa-lock"></i> 差分隐私查询</h4>
+        <p class="text-muted mb-0">基于差分隐私技术的安全统计查询</p>
+    </div>
+</div>
+
+<!-- 差分隐私说明 -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="fa fa-info-circle text-primary"></i> 差分隐私技术说明</h5>
+        <p class="card-text">
+            差分隐私(Differential Privacy)是一种强大的隐私保护框架，通过在查询结果中添加精心设计的噪声，
+            确保单个数据记录的存在与否不会显著影响查询结果，从而保护个体隐私。
+        </p>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="border rounded p-3 text-center">
+                    <h6 class="text-primary">ε (Epsilon)</h6>
+                    <p class="small text-muted mb-0">隐私预算参数，值越小隐私保护越强，但数据准确性降低</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="border rounded p-3 text-center">
+                    <h6 class="text-success">δ (Delta)</h6>
+                    <p class="small text-muted mb-0">失败概率参数，表示隐私保护失败的概率上界</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="border rounded p-3 text-center">
+                    <h6 class="text-info">敏感度</h6>
+                    <p class="small text-muted mb-0">查询函数对单个数据变化的敏感程度</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- 查询面板 -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="fa fa-search"></i> 隐私查询</h6>
+            </div>
+            <div class="card-body">
+                <form id="privacyQueryForm">
+                    <div class="mb-3">
+                        <label class="form-label">查询类型</label>
+                        <select class="form-select" id="queryType" name="query_type">
+                            <option value="count_by_department">按院系统计人数</option>
+                            <option value="age_distribution">年龄分布统计</option>
+                            <option value="gender_ratio">性别比例统计</option>
+                            <option value="salary_stats">薪资统计（教职工）</option>
+                            <option value="department_distribution">院系分布统计</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3" id="departmentSelect">
+                        <label class="form-label">选择院系</label>
+                        <select class="form-select" id="department" name="department">
+                            {% for dept in departments %}
+                            <option value="{{ dept.department }}">{{ dept.department }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">隐私预算 (ε)</label>
+                        <input type="range" class="form-range" id="epsilon" min="0.1" max="5" step="0.1" value="1.0">
+                        <div class="d-flex justify-content-between">
+                            <span class="small text-muted">强隐私 (0.1)</span>
+                            <span class="badge bg-primary" id="epsilonValue">1.0</span>
+                            <span class="small text-muted">弱隐私 (5.0)</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fa fa-calculator"></i> 执行隐私查询
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 结果面板 -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fa fa-bar-chart"></i> 查询结果</h6>
+                <span class="badge bg-info" id="privacyBudget">隐私预算: ε=1.0</span>
+            </div>
+            <div class="card-body">
+                <div id="queryResult">
+                    <div class="text-center text-muted py-5">
+                        <i class="fa fa-arrow-left fa-2x mb-3"></i>
+                        <p>请在左侧选择查询类型并执行查询</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 对比分析 -->
+<div class="card border-0 shadow-sm mt-4">
+    <div class="card-header bg-white">
+        <h6 class="mb-0"><i class="fa fa-balance-scale"></i> 真实结果 vs 差分隐私结果对比</h6>
+    </div>
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label class="form-label">选择对比类型</label>
+                <select class="form-select" id="compareType">
+                    <option value="student_count">学生总人数</option>
+                    <option value="department_counts">各院系人数</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">隐私预算</label>
+                <select class="form-select" id="compareEpsilon">
+                    <option value="0.1">ε = 0.1 (最强隐私)</option>
+                    <option value="0.5">ε = 0.5</option>
+                    <option value="1.0" selected>ε = 1.0 (推荐)</option>
+                    <option value="2.0">ε = 2.0</option>
+                    <option value="5.0">ε = 5.0 (最弱隐私)</option>
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="button" class="btn btn-success w-100" id="compareBtn">
+                    <i class="fa fa-exchange"></i> 执行对比
+                </button>
+            </div>
+        </div>
+
+        <div id="compareResult">
+            <div class="text-center text-muted py-4">
+                <p>点击"执行对比"查看真实数据与差分隐私数据的对比</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 图表展示 -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="fa fa-line-chart"></i> 不同ε值误差对比</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="epsilonChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="fa fa-shield"></i> 隐私保护强度</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="privacyChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// CSRF token for API requests - 从meta标签获取
+let csrfToken = '';
+const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+if (csrfMeta) {
+    csrfToken = csrfMeta.getAttribute('content');
+}
+
+// 调试信息
+console.log('CSRF Token:', csrfToken ? '已获取: ' + csrfToken.substring(0, 20) + '...' : '未找到');
+console.log('页面加载完成，初始化事件监听器');
+
+// 如果CSRF token未找到，尝试从session获取
+if (!csrfToken) {
+    console.warn('警告: CSRF token未找到，API请求可能会失败');
+}
+
+// Epsilon滑块更新
+document.getElementById('epsilon').addEventListener('input', function() {
+    document.getElementById('epsilonValue').textContent = this.value;
+});
+
+// 查询类型变化 - 初始状态显示院系选择框（因为默认选项是"按院系统计人数"）
+document.getElementById('queryType').addEventListener('change', function() {
+    const deptSelect = document.getElementById('departmentSelect');
+    console.log('查询类型变更为:', this.value);
+    if (this.value === 'count_by_department') {
+        deptSelect.style.display = 'block';
+    } else {
+        deptSelect.style.display = 'none';
+    }
+});
+
+// 页面加载时确保院系选择框显示（因为默认选项是"按院系统计人数"）
+document.addEventListener('DOMContentLoaded', function() {
+    const queryType = document.getElementById('queryType').value;
+    const deptSelect = document.getElementById('departmentSelect');
+    if (queryType === 'count_by_department') {
+        deptSelect.style.display = 'block';
+    }
+    console.log('初始查询类型:', queryType);
+
+    // 重新获取CSRF token
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    if (meta) {
+        csrfToken = meta.getAttribute('content');
+        console.log('重新获取CSRF Token:', csrfToken ? '成功' : '失败');
+    }
+});
+
+// 执行隐私查询
+document.getElementById('privacyQueryForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const queryType = document.getElementById('queryType').value;
+    const epsilon = document.getElementById('epsilon').value;
+    const department = document.getElementById('department').value;
+
+    const params = { department: department };
+
+    // 显示加载状态
+    document.getElementById('queryResult').innerHTML =
+        '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">正在执行查询...</p></div>';
+
+    const requestBody = JSON.stringify({
+        query_type: queryType,
+        params: params,
+        epsilon: parseFloat(epsilon)
+    });
+
+    console.log('发送请求:', '/data/api/privacy/query', requestBody);
+
+    fetch('/data/api/privacy/query', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: requestBody
+    })
+    .then(response => {
+        console.log('响应状态:', response.status);
+        if (!response.ok) {
+            return response.text().then(text => {
+                console.error('错误响应:', text);
+                throw new Error('HTTP error: ' + response.status + ' - ' + text);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('响应数据:', data);
+        if (data.success) {
+            displayResult(data.result, queryType);
+            document.getElementById('privacyBudget').textContent = `隐私预算: ε=${data.privacy_budget_used}`;
+        } else {
+            document.getElementById('queryResult').innerHTML =
+                `<div class="alert alert-danger"><i class="fa fa-times-circle"></i> ${data.error}</div>`;
+        }
+    })
+    .catch(error => {
+        console.error('Query error:', error);
+        document.getElementById('queryResult').innerHTML =
+            `<div class="alert alert-danger"><i class="fa fa-times-circle"></i> 查询失败: ${error.message}</div>`;
+    });
+});
+
+// 显示查询结果
+function displayResult(result, queryType) {
+    let html = '<div class="table-responsive"><table class="table table-bordered">';
+
+    if (queryType === 'count_by_department') {
+        html += `<tr><th>院系</th><td>${result.department}</td></tr>
+                 <tr><th>学生人数（含噪声）</th><td><strong class="text-primary">${result.count}</strong></td></tr>
+                 <tr><th>隐私预算</th><td>ε = ${result.epsilon}</td></tr>`;
+    } else if (queryType === 'age_distribution') {
+        html += '<tr><th>年龄段</th><th>人数（含噪声）</th></tr>';
+        for (const age in result) {
+            if (result.hasOwnProperty(age)) {
+                html += `<tr><td>${age}岁</td><td>${result[age]}</td></tr>`;
+            }
+        }
+    } else if (queryType === 'gender_ratio') {
+        html += `<tr><th>男生人数</th><td>${result.male_count}</td></tr>
+                 <tr><th>女生人数</th><td>${result.female_count}</td></tr>
+                 <tr><th>男生比例</th><td>${(result.male_ratio * 100).toFixed(1)}%</td></tr>
+                 <tr><th>女生比例</th><td>${(result.female_ratio * 100).toFixed(1)}%</td></tr>`;
+    } else if (queryType === 'salary_stats') {
+        html += `<tr><th>平均薪资</th><td>¥${result.mean.toFixed(2)}</td></tr>
+                 <tr><th>薪资标准差</th><td>¥${result.std.toFixed(2)}</td></tr>
+                 <tr><th>最低薪资</th><td>¥${result.min.toFixed(2)}</td></tr>
+                 <tr><th>最高薪资</th><td>¥${result.max.toFixed(2)}</td></tr>`;
+    } else if (queryType === 'department_distribution') {
+        html += '<tr><th>院系</th><th>人数（含噪声）</th></tr>';
+        for (const dept in result) {
+            if (result.hasOwnProperty(dept)) {
+                html += `<tr><td>${dept}</td><td>${result[dept]}</td></tr>`;
+            }
+        }
+    } else {
+        html += `<tr><th>查询结果</th><td><pre>${JSON.stringify(result, null, 2)}</pre></td></tr>`;
+    }
+
+    html += '</table></div>';
+    html += '<p class="text-muted small mt-2"><i class="fa fa-info-circle"></i> 结果已添加差分隐私噪声保护</p>';
+
+    document.getElementById('queryResult').innerHTML = html;
+}
+
+// 执行对比
+document.getElementById('compareBtn').addEventListener('click', function() {
+    const compareType = document.getElementById('compareType').value;
+    const epsilon = document.getElementById('compareEpsilon').value;
+
+    // 显示加载状态
+    document.getElementById('compareResult').innerHTML =
+        '<div class="text-center py-4"><div class="spinner-border text-success" role="status"></div><p class="mt-2">正在执行对比...</p></div>';
+
+    console.log('发送对比请求:', '/data/api/privacy/compare');
+
+    fetch('/data/api/privacy/compare', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            query_type: compareType,
+            epsilon: parseFloat(epsilon)
+        })
+    })
+    .then(response => {
+        console.log('对比响应状态:', response.status);
+        if (!response.ok) {
+            return response.text().then(text => {
+                console.error('对比错误响应:', text);
+                throw new Error('HTTP error: ' + response.status + ' - ' + text);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('对比响应数据:', data);
+        if (data.success) {
+            displayCompareResult(data.result, compareType);
+        } else {
+            document.getElementById('compareResult').innerHTML =
+                `<div class="alert alert-danger"><i class="fa fa-times-circle"></i> ${data.error}</div>`;
+        }
+    })
+    .catch(error => {
+        console.error('Compare error:', error);
+        document.getElementById('compareResult').innerHTML =
+            `<div class="alert alert-danger"><i class="fa fa-times-circle"></i> 对比失败: ${error.message}</div>`;
+    });
+});
+
+// 显示对比结果
+function displayCompareResult(result, compareType) {
+    let html = '';
+
+    if (compareType === 'student_count') {
+        html = `
+            <div class="row text-center">
+                <div class="col-md-4">
+                    <h6 class="text-muted">真实值</h6>
+                    <h2 class="text-primary">${result.original.count}</h2>
+                </div>
+                <div class="col-md-4">
+                    <h6 class="text-muted">噪声值</h6>
+                    <h2 class="text-success">${result.noisy.count}</h2>
+                </div>
+                <div class="col-md-4">
+                    <h6 class="text-muted">误差</h6>
+                    <h2 class="text-warning">${result.noise.absolute}</h2>
+                    <small class="text-muted">${(result.noise.relative * 100).toFixed(2)}%</small>
+                </div>
+            </div>`;
+    } else {
+        html = '<div class="table-responsive"><table class="table table-sm table-bordered">';
+        html += '<thead><tr><th>院系</th><th>真实值</th><th>噪声值</th><th>误差</th></tr></thead><tbody>';
+
+        for (const dept in result.original) {
+            const orig = result.original[dept];
+            const noisy = result.noisy[dept];
+            const error = Math.abs(noisy - orig);
+            html += `<tr>
+                <td>${dept}</td>
+                <td>${orig}</td>
+                <td class="text-success">${noisy}</td>
+                <td class="text-warning">${error}</td>
+            </tr>`;
+        }
+
+        html += '</tbody></table></div>';
+    }
+
+    document.getElementById('compareResult').innerHTML = html;
+}
+
+// 初始化图表
+const epsilonCtx = document.getElementById('epsilonChart').getContext('2d');
+new Chart(epsilonCtx, {
+    type: 'bar',
+    data: {
+        labels: ['ε=0.1', 'ε=0.5', 'ε=1.0', 'ε=2.0', 'ε=5.0'],
+        datasets: [{
+            label: '相对误差 (%)',
+            data: [50, 20, 10, 5, 2],
+            backgroundColor: [
+                'rgba(220, 53, 69, 0.7)',
+                'rgba(255, 193, 7, 0.7)',
+                'rgba(23, 162, 184, 0.7)',
+                'rgba(40, 167, 69, 0.7)',
+                'rgba(0, 123, 255, 0.7)'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: { display: true, text: '相对误差 (%)' }
+            }
+        }
+    }
+});
+
+const privacyCtx = document.getElementById('privacyChart').getContext('2d');
+new Chart(privacyCtx, {
+    type: 'radar',
+    data: {
+        labels: ['隐私保护', '数据精度', '查询效率', '可用性', '安全性'],
+        datasets: [{
+            label: 'ε=1.0',
+            data: [80, 70, 90, 75, 85],
+            borderColor: 'rgba(102, 126, 234, 1)',
+            backgroundColor: 'rgba(102, 126, 234, 0.2)'
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            r: {
+                beginAtZero: true,
+                max: 100
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

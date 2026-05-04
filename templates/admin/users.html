@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}用户管理 - 校园安全防护系统{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0"><i class="fa fa-users"></i> 用户管理</h4>
+        <p class="text-muted mb-0">管理系统用户账户和权限</p>
+    </div>
+    <div>
+        <a href="{{ url_for('admin.create_user') }}" class="btn btn-primary">
+            <i class="fa fa-plus"></i> 添加用户
+        </a>
+    </div>
+</div>
+
+<!-- 搜索筛选 -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <input type="text" class="form-control" name="search"
+                       placeholder="搜索用户名/姓名/邮箱" value="{{ search }}">
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" name="role">
+                    <option value="">所有角色</option>
+                    {% for role in roles %}
+                    <option value="{{ role.id }}" {% if role_filter == role.id|string %}selected{% endif %}>
+                        {{ role.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" name="status">
+                    <option value="">所有状态</option>
+                    <option value="1" {% if status_filter == '1' %}selected{% endif %}>启用</option>
+                    <option value="0" {% if status_filter == '0' %}selected{% endif %}>禁用</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fa fa-search"></i> 搜索
+                </button>
+            </div>
+            <div class="col-md-2">
+                <a href="{{ url_for('admin.users') }}" class="btn btn-outline-secondary w-100">
+                    <i class="fa fa-refresh"></i> 重置
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 用户列表 -->
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th width="50">ID</th>
+                        <th>用户名</th>
+                        <th>姓名</th>
+                        <th>邮箱</th>
+                        <th>部门</th>
+                        <th>角色</th>
+                        <th>状态</th>
+                        <th>最后登录</th>
+                        <th width="150">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td>
+                            <i class="fa fa-user-circle text-primary"></i>
+                            {{ user.username }}
+                        </td>
+                        <td>{{ user.real_name or '-' }}</td>
+                        <td>
+                            {% if user.email %}
+                            <a href="mailto:{{ user.email }}">{{ user.email }}</a>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td>{{ user.department or '-' }}</td>
+                        <td>
+                            <span class="badge bg-info">{{ user.role_name or '未分配' }}</span>
+                        </td>
+                        <td>
+                            {% if user.status == 1 %}
+                            <span class="badge bg-success">启用</span>
+                            {% else %}
+                            <span class="badge bg-danger">禁用</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small>{{ user.last_login or '从未登录' }}</small>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('admin.edit_user', user_id=user.id) }}"
+                                   class="btn btn-outline-primary" title="编辑">
+                                    <i class="fa fa-edit"></i>
+                                </a>
+                                {% if user.id != current_user.id %}
+                                <button type="button" class="btn btn-outline-danger"
+                                        onclick="confirmDelete({{ user.id }}, '{{ user.username }}')" title="删除">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-5">
+                            <i class="fa fa-inbox fa-3x mb-3 d-block"></i>
+                            暂无用户数据
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 分页 -->
+    {% if total > per_page %}
+    <div class="card-footer bg-white">
+        <nav>
+            <ul class="pagination justify-content-center mb-0">
+                {% set pages = (total + per_page - 1) // per_page %}
+                {% if page > 1 %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin.users', page=page-1, search=search, role=role_filter, status=status_filter) }}">
+                        <i class="fa fa-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+
+                {% for p in range(1, pages + 1) %}
+                <li class="page-item {% if p == page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('admin.users', page=p, search=search, role=role_filter, status=status_filter) }}">
+                        {{ p }}
+                    </a>
+                </li>
+                {% endfor %}
+
+                {% if page < pages %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin.users', page=page+1, search=search, role=role_filter, status=status_filter) }}">
+                        <i class="fa fa-chevron-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<!-- 删除确认模态框 -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">确认删除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>确定要删除用户 <strong id="deleteUsername"></strong> 吗？此操作不可恢复。</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger">确认删除</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete(userId, username) {
+    document.getElementById('deleteUsername').textContent = username;
+    document.getElementById('deleteForm').action = `/admin/users/${userId}/delete`;
+
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+</script>
+{% endblock %}

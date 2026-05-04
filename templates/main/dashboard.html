@@ -1,0 +1,329 @@
+{% extends "base.html" %}
+
+{% block title %}系统仪表盘 - 校园安全防护系统{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h4 class="mb-0"><i class="fa fa-dashboard"></i> 系统仪表盘</h4>
+        <p class="text-muted">欢迎回来，{{ current_user.real_name or current_user.username }}！</p>
+    </div>
+    <div class="col-auto">
+        <span class="text-muted"><i class="fa fa-clock-o"></i> {{ now.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+    </div>
+</div>
+
+<!-- 统计卡片 -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                            <i class="fa fa-users fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="text-muted mb-1">系统用户</h6>
+                        <h3 class="mb-0">{{ stats.total_users }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent border-0 py-2">
+                <small class="text-muted">
+                    <a href="{{ url_for('admin.users') }}" class="text-decoration-none">
+                        查看详情 <i class="fa fa-arrow-right"></i>
+                    </a>
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                            <i class="fa fa-graduation-cap fa-2x text-success"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="text-muted mb-1">学生数据</h6>
+                        <h3 class="mb-0">{{ stats.total_students }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent border-0 py-2">
+                <small class="text-muted">
+                    <a href="{{ url_for('data.students') }}" class="text-decoration-none">
+                        查看详情 <i class="fa fa-arrow-right"></i>
+                    </a>
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="bg-info bg-opacity-10 rounded-circle p-3">
+                            <i class="fa fa-sign-in fa-2x text-info"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="text-muted mb-1">今日登录</h6>
+                        <h3 class="mb-0">{{ stats.today_logins }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                            <i class="fa fa-warning fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="text-muted mb-1">待处理事件</h6>
+                        <h3 class="mb-0">{{ stats.pending_events }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent border-0 py-2">
+                <small class="text-muted">
+                    <a href="{{ url_for('admin.security_events') }}" class="text-decoration-none">
+                        查看详情 <i class="fa fa-arrow-right"></i>
+                    </a>
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 图表区域 -->
+<div class="row g-4 mb-4">
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 py-3">
+                <h6 class="mb-0"><i class="fa fa-line-chart"></i> 登录趋势（最近7天）</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="loginTrendChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 py-3">
+                <h6 class="mb-0"><i class="fa fa-pie-chart"></i> 数据访问分布</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="accessDistChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 最近活动 -->
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fa fa-history"></i> 最近登录</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>用户</th>
+                                <th>IP地址</th>
+                                <th>时间</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in recent_logins %}
+                            <tr>
+                                <td>
+                                    <i class="fa fa-user-circle text-primary"></i>
+                                    {{ log.real_name or log.username }}
+                                </td>
+                                <td><code>{{ log.ip_address }}</code></td>
+                                <td><small>{{ log.login_time }}</small></td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-4">暂无登录记录</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fa fa-list-alt"></i> 最近操作</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>用户</th>
+                                <th>操作</th>
+                                <th>时间</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in recent_audits %}
+                            <tr>
+                                <td>{{ log.username }}</td>
+                                <td>
+                                    <span class="badge bg-light text-dark">{{ log.action }}</span>
+                                </td>
+                                <td><small>{{ log.created_at }}</small></td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-4">暂无操作记录</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 系统功能卡片 -->
+<div class="row g-4 mt-4">
+    <div class="col-12">
+        <h5 class="mb-3"><i class="fa fa-cubes"></i> 核心功能</h5>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100 feature-card">
+            <div class="card-body text-center py-4">
+                <div class="bg-primary bg-opacity-10 rounded-circle p-4 d-inline-block mb-3">
+                    <i class="fa fa-lock fa-2x text-primary"></i>
+                </div>
+                <h6>国密SM4加密</h6>
+                <p class="text-muted small mb-0">采用国密SM4算法对敏感数据进行加密存储，支持多种加密模式</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100 feature-card">
+            <div class="card-body text-center py-4">
+                <div class="bg-success bg-opacity-10 rounded-circle p-4 d-inline-block mb-3">
+                    <i class="fa fa-user-secret fa-2x text-success"></i>
+                </div>
+                <h6>差分隐私保护</h6>
+                <p class="text-muted small mb-0">基于差分隐私技术，实现统计查询的隐私保护</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100 feature-card">
+            <div class="card-body text-center py-4">
+                <div class="bg-info bg-opacity-10 rounded-circle p-4 d-inline-block mb-3">
+                    <i class="fa fa-eye-slash fa-2x text-info"></i>
+                </div>
+                <h6>敏感数据脱敏</h6>
+                <p class="text-muted small mb-0">动态数据脱敏，支持身份证、手机号、邮箱等多种类型</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100 feature-card">
+            <div class="card-body text-center py-4">
+                <div class="bg-warning bg-opacity-10 rounded-circle p-4 d-inline-block mb-3">
+                    <i class="fa fa-shield fa-2x text-warning"></i>
+                </div>
+                <h6>RBAC权限控制</h6>
+                <p class="text-muted small mb-0">基于角色的访问控制，精细化权限管理</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 登录趋势图表
+const loginTrendCtx = document.getElementById('loginTrendChart').getContext('2d');
+const loginData = {{ login_trend | tojson }};
+
+new Chart(loginTrendCtx, {
+    type: 'line',
+    data: {
+        labels: loginData.map(d => d.date),
+        datasets: [{
+            label: '登录次数',
+            data: loginData.map(d => d.count),
+            borderColor: '#667eea',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            fill: true,
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// 数据访问分布图表
+const accessDistCtx = document.getElementById('accessDistChart').getContext('2d');
+const accessData = {{ access_stats | tojson }};
+
+new Chart(accessDistCtx, {
+    type: 'doughnut',
+    data: {
+        labels: accessData.map(d => d.data_type),
+        datasets: [{
+            data: accessData.map(d => d.count),
+            backgroundColor: [
+                '#667eea', '#764ba2', '#f093fb', '#f5576c',
+                '#4facfe', '#00f2fe', '#43e97b', '#38f9d7'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

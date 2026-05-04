@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}搜索结果 - 校园安全防护系统{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="fa fa-search"></i> 搜索结果</h5>
+                </div>
+                <div class="card-body">
+                    <form method="GET" class="mb-3">
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="q" placeholder="输入搜索关键词..." value="{{ keyword }}">
+                            <button class="btn btn-primary" type="submit"><i class="fa fa-search"></i> 搜索</button>
+                        </div>
+                    </form>
+
+                    {% if results %}
+                        {% if results.students %}
+                        <h6>学生数据</h6>
+                        <div class="table-responsive mb-4">
+                            <table class="table table-sm table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>学号</th>
+                                        <th>姓名</th>
+                                        <th>院系</th>
+                                        <th>专业</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for student in results.students %}
+                                    <tr>
+                                        <td>{{ student.student_id }}</td>
+                                        <td>{{ student.name }}</td>
+                                        <td>{{ student.department or '-' }}</td>
+                                        <td>{{ student.major or '-' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% endif %}
+
+                        {% if results.staff %}
+                        <h6>教职工数据</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>工号</th>
+                                        <th>姓名</th>
+                                        <th>部门</th>
+                                        <th>职位</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for s in results.staff %}
+                                    <tr>
+                                        <td>{{ s.staff_id }}</td>
+                                        <td>{{ s.name }}</td>
+                                        <td>{{ s.department or '-' }}</td>
+                                        <td>{{ s.position or '-' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        {% if keyword %}
+                        <p class="text-center text-muted py-4">未找到与"{{ keyword }}"相关的结果</p>
+                        {% else %}
+                        <p class="text-center text-muted py-4">请输入搜索关键词</p>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

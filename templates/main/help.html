@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}帮助中心 - 校园安全防护系统{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="fa fa-question-circle"></i> 帮助中心</h5>
+                </div>
+                <div class="card-body">
+                    <h5>快速入门</h5>
+                    <p>欢迎使用校园多源敏感数据一体化安全防护系统。以下是各功能模块的使用说明：</p>
+
+                    <hr>
+
+                    <h6><i class="fa fa-database"></i> 数据管理</h6>
+                    <p>数据管理模块提供学生数据和教职工数据的查看、添加、编辑、删除功能。敏感数据会自动进行脱敏处理。</p>
+
+                    <hr>
+
+                    <h6><i class="fa fa-lock"></i> 差分隐私查询</h6>
+                    <p>差分隐私查询模块允许您进行统计查询，系统会自动添加噪声以保护个人隐私。您可以调整隐私预算ε来平衡查询精度和隐私保护程度。</p>
+
+                    <hr>
+
+                    <h6><i class="fa fa-shield"></i> 文件加密</h6>
+                    <p>文件加密模块支持使用国密SM4算法对文件进行加密和解密操作。支持CBC、CTR、ECB三种加密模式。</p>
+
+                    <hr>
+
+                    <h6><i class="fa fa-cogs"></i> 系统管理</h6>
+                    <p>系统管理模块（仅管理员可访问）包含用户管理、角色管理、安全事件监控和系统设置功能。</p>
+
+                    <hr>
+
+                    <h5>常见问题</h5>
+                    <div class="accordion" id="faqAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                    为什么看不到完整的身份证号/手机号？
+                                </button>
+                            </h2>
+                            <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    系统会对敏感信息进行自动脱敏处理，只有拥有"敏感数据解密"权限的用户才能查看完整信息。
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                    差分隐私查询的结果为什么和真实值不同？
+                                </button>
+                            </h2>
+                            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    差分隐私技术会在查询结果中添加随机噪声，以防止通过查询结果推断出个人隐私信息。噪声的大小取决于隐私预算ε，ε越小隐私保护越强但结果精度越低。
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

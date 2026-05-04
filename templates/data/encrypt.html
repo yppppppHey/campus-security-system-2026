@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}文件加密 - 校园安全防护系统{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="fa fa-lock"></i> 文件加密</h5>
+                </div>
+                <div class="card-body">
+                    <form id="encryptForm">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="mb-3">
+                            <label for="encryptFile" class="form-label">选择要加密的文件</label>
+                            <input type="file" class="form-control" id="encryptFile" name="file" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">加密模式</label>
+                            <select class="form-select" name="encrypt_mode">
+                                <option value="CBC">CBC模式（推荐）</option>
+                                <option value="CTR">CTR模式</option>
+                                <option value="ECB">ECB模式</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fa fa-lock"></i> 加密文件
+                        </button>
+                    </form>
+                    <div id="encryptResult" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="fa fa-unlock"></i> 文件解密</h5>
+                </div>
+                <div class="card-body">
+                    <form id="decryptForm">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="mb-3">
+                            <label for="decryptFile" class="form-label">选择要解密的文件</label>
+                            <input type="file" class="form-control" id="decryptFile" name="file" accept=".enc" required>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="fa fa-unlock"></i> 解密文件
+                        </button>
+                    </form>
+                    <div id="decryptResult" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="fa fa-info-circle"></i> 加密说明</h5>
+                </div>
+                <div class="card-body">
+                    <p>本系统使用国密SM4算法对文件进行加密保护。</p>
+                    <ul>
+                        <li><strong>CBC模式</strong>：密码分组链接模式，推荐使用，安全性高</li>
+                        <li><strong>CTR模式</strong>：计数器模式，适合并行处理</li>
+                        <li><strong>ECB模式</strong>：电子密码本模式，不建议用于敏感数据</li>
+                    </ul>
+                    <p class="text-warning"><i class="fa fa-exclamation-triangle"></i> 请妥善保管加密后的文件，解密时需要使用相同的密钥。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('encryptForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var formData = new FormData(this);
+
+    fetch('{{ url_for("data.encrypt_file") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        var resultDiv = document.getElementById('encryptResult');
+        if (data.success) {
+            resultDiv.innerHTML = '<div class="alert alert-success"><i class="fa fa-check"></i> ' + data.message + '<br>加密文件: ' + data.encrypted_file + '</div>';
+        } else {
+            resultDiv.innerHTML = '<div class="alert alert-danger"><i class="fa fa-times"></i> ' + data.error + '</div>';
+        }
+    });
+});
+
+document.getElementById('decryptForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var formData = new FormData(this);
+
+    fetch('{{ url_for("data.decrypt_file") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.blob();
+        } else {
+            return response.json().then(data => { throw new Error(data.error); });
+        }
+    })
+    .then(blob => {
+        var url = window.URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = document.getElementById('decryptFile').files[0].name.replace('.enc', '');
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.getElementById('decryptResult').innerHTML = '<div class="alert alert-success"><i class="fa fa-check"></i> 文件解密成功，已自动下载</div>';
+    })
+    .catch(error => {
+        document.getElementById('decryptResult').innerHTML = '<div class="alert alert-danger"><i class="fa fa-times"></i> ' + error.message + '</div>';
+    });
+});
+</script>
+{% endblock %}

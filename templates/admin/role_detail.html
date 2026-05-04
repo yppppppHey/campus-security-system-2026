@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}角色详情 - 校园安全防护系统{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="fa fa-user-tag"></i> 角色详情: {{ role.name }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <p><strong>角色代码:</strong> <code>{{ role.code }}</code></p>
+                            <p><strong>描述:</strong> {{ role.description or '-' }}</p>
+                            <p><strong>创建时间:</strong> {{ role.created_at }}</p>
+                        </div>
+                    </div>
+
+                    <h6 class="border-bottom pb-2 mb-3"><i class="fa fa-key"></i> 权限列表</h6>
+                    <div class="row">
+                        {% for perm in all_permissions %}
+                        <div class="col-md-4 mb-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="perm_{{ perm.id }}"
+                                       {{ 'checked' if perm.id in permissions|map(attribute='id')|list else '' }} disabled>
+                                <label class="form-check-label" for="perm_{{ perm.id }}">
+                                    {{ perm.name }}
+                                    <small class="text-muted d-block">{{ perm.code }}</small>
+                                </label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mt-4">
+                        <a href="{{ url_for('admin.roles') }}" class="btn btn-secondary">
+                            <i class="fa fa-arrow-left"></i> 返回
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

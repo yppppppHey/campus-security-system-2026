@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}系统设置 - 校园安全防护系统{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="fa fa-cog"></i> 系统设置</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin.update_settings') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        {% for config in configs %}
+                        <div class="mb-3">
+                            <label for="config_{{ config.config_key }}" class="form-label">{{ config.config_key }}</label>
+                            <input type="text" class="form-control" id="config_{{ config.config_key }}"
+                                   name="config_{{ config.config_key }}" value="{{ config.config_value or '' }}">
+                            {% if config.description %}
+                            <small class="text-muted">{{ config.description }}</small>
+                            {% endif %}
+                        </div>
+                        {% else %}
+                        <p class="text-muted">暂无配置项</p>
+                        {% endfor %}
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa fa-save"></i> 保存设置
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

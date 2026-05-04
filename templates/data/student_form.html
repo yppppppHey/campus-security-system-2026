@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - 校园安全防护系统{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fa fa-user-plus"></i> {{ '编辑学生' if student else '添加学生' }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('data.edit_student', student_id=student.id) if student else url_for('data.create_student') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="student_id" class="form-label">学号 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="student_id" name="student_id"
+                                       value="{{ student.student_id if student else '' }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="name" class="form-label">姓名 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="name" name="name"
+                                       value="{{ student.name if student else '' }}" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="gender" class="form-label">性别</label>
+                                <select class="form-select" id="gender" name="gender">
+                                    <option value="">请选择</option>
+                                    <option value="男" {{ 'selected' if student and student.gender == '男' else '' }}>男</option>
+                                    <option value="女" {{ 'selected' if student and student.gender == '女' else '' }}>女</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="birth_date" class="form-label">出生日期</label>
+                                <input type="date" class="form-control" id="birth_date" name="birth_date"
+                                       value="{{ student.birth_date if student else '' }}">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="id_card" class="form-label">身份证号</label>
+                                <input type="text" class="form-control" id="id_card" name="id_card"
+                                       value="{{ student.id_card if student else '' }}" maxlength="18">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="phone" class="form-label">联系电话</label>
+                                <input type="tel" class="form-control" id="phone" name="phone"
+                                       value="{{ student.phone if student else '' }}" maxlength="11">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">邮箱</label>
+                                <input type="email" class="form-control" id="email" name="email"
+                                       value="{{ student.email if student else '' }}">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="department" class="form-label">院系</label>
+                                <input type="text" class="form-control" id="department" name="department"
+                                       value="{{ student.department if student else '' }}">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="major" class="form-label">专业</label>
+                                <input type="text" class="form-control" id="major" name="major"
+                                       value="{{ student.major if student else '' }}">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="class_name" class="form-label">班级</label>
+                                <input type="text" class="form-control" id="class_name" name="class_name"
+                                       value="{{ student.class_name if student else '' }}">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="enrollment_date" class="form-label">入学日期</label>
+                                <input type="date" class="form-control" id="enrollment_date" name="enrollment_date"
+                                       value="{{ student.enrollment_date if student else '' }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="address" class="form-label">家庭住址</label>
+                                <input type="text" class="form-control" id="address" name="address"
+                                       value="{{ student.address if student else '' }}">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="emergency_contact" class="form-label">紧急联系人</label>
+                                <input type="text" class="form-control" id="emergency_contact" name="emergency_contact"
+                                       value="{{ student.emergency_contact if student else '' }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="emergency_phone" class="form-label">紧急联系电话</label>
+                                <input type="tel" class="form-control" id="emergency_phone" name="emergency_phone"
+                                       value="{{ student.emergency_phone if student else '' }}">
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <a href="{{ url_for('data.students') }}" class="btn btn-secondary me-2">
+                                <i class="fa fa-arrow-left"></i> 取消
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa fa-save"></i> 保存
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

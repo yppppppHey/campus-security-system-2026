@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}关于系统 - 校园安全防护系统{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="fa fa-info-circle"></i> 关于系统</h5>
+                </div>
+                <div class="card-body">
+                    <h4>校园多源敏感数据一体化安全防护系统</h4>
+                    <p class="text-muted">Campus Multi-source Sensitive Data Integrated Security Protection System</p>
+
+                    <hr>
+
+                    <h5>系统简介</h5>
+                    <p>本系统是一个面向校园环境的多源敏感数据安全防护平台，实现了以下核心功能：</p>
+                    <ul>
+                        <li><strong>RBAC权限控制</strong>：基于角色的访问控制，支持管理员、安全员、审计员、普通用户四种角色</li>
+                        <li><strong>国密SM4加密</strong>：采用国密SM4算法对敏感数据进行加密存储</li>
+                        <li><strong>差分隐私</strong>：在统计查询中添加噪声，保护个人隐私</li>
+                        <li><strong>数据脱敏</strong>：动态脱敏身份证、手机号、邮箱等敏感信息</li>
+                        <li><strong>安全审计</strong>：全链路操作日志记录，支持安全事件追踪</li>
+                    </ul>
+
+                    <hr>
+
+                    <h5>技术栈</h5>
+                    <ul>
+                        <li>后端框架：Flask</li>
+                        <li>数据库：SQLite</li>
+                        <li>加密算法：SM4（国密）</li>
+                        <li>前端框架：Bootstrap 5</li>
+                        <li>图表库：Chart.js</li>
+                    </ul>
+
+                    <hr>
+
+                    <h5>版本信息</h5>
+                    <p>版本号：v1.0.0</p>
+                    <p>开发团队：挑战杯参赛团队</p>
+                    <p>赛道：网络安全赛道</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
