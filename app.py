@@ -4,7 +4,7 @@
 面向校园多源敏感数据的一体化安全防护系统
 Campus Multi-source Sensitive Data Integrated Security Protection System
 
-作者: 挑战杯参赛团队
+作者: 数据安全课程设计
 版本: 1.0.0
 描述: 实现RBAC权限控制、国密SM4加密、差分隐私、数据脱敏、安全审计的完整系统
 
@@ -48,7 +48,8 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 # 初始化CSRF保护
-csrf = CSRFProtect(app)
+csrf = CSRFProtect()
+csrf.init_app(app)
 
 # 初始化登录管理器
 login_manager = LoginManager()
@@ -100,16 +101,25 @@ def create_app():
     from app.routes.admin import admin_bp
     from app.routes.api import api_bp
     from app.routes.data import data_bp
+    from app.routes.sef_api import sef_api
+
+    # 豁免SEF API的CSRF保护（必须在蓝图注册之前）
+    csrf.exempt(sef_api)
 
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(main_bp)
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(data_bp, url_prefix='/data')
+    app.register_blueprint(sef_api, url_prefix='/api/sef')
 
     # 为差分隐私API路由豁免CSRF保护
     csrf.exempt(app.view_functions['data.api_privacy_query'])
     csrf.exempt(app.view_functions['data.api_privacy_compare'])
+
+    # 打印豁免信息
+    app.logger.info(f'CSRF豁免蓝图: {csrf._exempt_blueprints}')
+    app.logger.info(f'CSRF豁免视图: {csrf._exempt_views}')
 
     # 注册模板过滤器
     register_template_filters()
@@ -188,7 +198,8 @@ def register_context_processors():
 @app.errorhandler(403)
 def forbidden(e):
     """403错误处理"""
-    from flask import render_template
+    from flask import render_template, request
+    print(f'DEBUG: request.endpoint={request.endpoint}, request.blueprint={request.blueprint}')
     return render_template('errors/403.html'), 403
 
 
@@ -210,8 +221,11 @@ def internal_server_error(e):
 @app.errorhandler(Exception)
 def handle_exception(e):
     """全局异常处理"""
-    from flask import render_template
-    app.logger.exception(f'未处理的异常: {e}')
+    from flask import render_template, request
+    app.logger.error(f'未处理的异常: {e}')
+    app.logger.error(f'request.endpoint={request.endpoint}, request.blueprint={request.blueprint}')
+    app.logger.error(f'app.blueprints={list(app.blueprints.keys())}')
+    app.logger.error(f'csrf._exempt_blueprints={csrf._exempt_blueprints}')
     return render_template('errors/500.html'), 500
 
 
@@ -223,6 +237,6 @@ if __name__ == '__main__':
     application.run(
         host=Config.HOST,
         port=Config.PORT,
-        debug=Config.DEBUG,
+        debug=False,  # 禁用debug模式避免reloader问题
         threaded=True
     )

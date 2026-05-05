@@ -10,6 +10,8 @@
     - privacy: 差分隐私
     - masking: 数据脱敏
     - audit: 安全审计
+    - structured_token: 结构化加密令牌(SEF)
+    - sef_file: SEF自加密文件格式
 """
 
 from .database import init_database, get_db, get_db_connection, DatabaseManager
@@ -19,6 +21,12 @@ from .encryption import SM4Encryptor, SM4, KeyManager
 from .privacy import DifferentialPrivacy, PrivacyQueryEngine, PrivacyBudgetTracker
 from .masking import DataMasker, MaskingPolicy, DynamicMasker, MaskingStrategy
 from .audit import AuditLogger, AuditEventType, RiskLevel
+from .structured_token import StructuredToken, SEFQueryHelper, get_sef_type_info
+from .sef_file import (
+    SEFFileEncryptor, SEFFileHeader, SEFFileAccessPolicy,
+    SEFKeyManager, SEFContentType, SEFAlgorithm,
+    create_sef_encryptor
+)
 
 __all__ = [
     # 数据库
@@ -61,4 +69,18 @@ __all__ = [
     'AuditLogger',
     'AuditEventType',
     'RiskLevel',
+
+    # 结构化加密令牌(SEF)
+    'StructuredToken',
+    'SEFQueryHelper',
+    'get_sef_type_info',
+
+    # SEF自加密文件
+    'SEFFileEncryptor',
+    'SEFFileHeader',
+    'SEFFileAccessPolicy',
+    'SEFKeyManager',
+    'SEFContentType',
+    'SEFAlgorithm',
+    'create_sef_encryptor',
 ]

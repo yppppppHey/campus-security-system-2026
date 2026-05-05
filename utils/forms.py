@@ -6,7 +6,7 @@
 """
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SelectField, TextAreaField, IntegerField, FloatField, DateField, FileField
+from wtforms import StringField, PasswordField, BooleanField, SelectField, TextAreaField, DateField
 from wtforms.validators import DataRequired, Email, Length, EqualTo, Optional, ValidationError
 import re
 
@@ -151,61 +151,6 @@ class StudentForm(FlaskForm):
         if field.data:
             if not re.match(r'^1[3-9]\d{9}$', field.data):
                 raise ValidationError('请输入有效的手机号')
-
-
-class StaffForm(FlaskForm):
-    """教职工表单"""
-    staff_id = StringField('工号', validators=[
-        DataRequired(message='请输入工号'),
-        Length(1, 20, message='工号长度为1-20个字符')
-    ])
-    name = StringField('姓名', validators=[
-        DataRequired(message='请输入姓名'),
-        Length(1, 50, message='姓名长度为1-50个字符')
-    ])
-    gender = SelectField('性别', choices=[
-        ('', '请选择'),
-        ('男', '男'),
-        ('女', '女')
-    ])
-    birth_date = DateField('出生日期', validators=[Optional()])
-    id_card = StringField('身份证号', validators=[Optional()])
-    phone = StringField('联系电话', validators=[Optional()])
-    email = StringField('邮箱', validators=[
-        Optional(),
-        Email(message='请输入有效的邮箱地址')
-    ])
-    department = StringField('部门', validators=[Optional()])
-    position = StringField('职位', validators=[Optional()])
-    title = StringField('职称', validators=[Optional()])
-    hire_date = DateField('入职日期', validators=[Optional()])
-    salary = FloatField('薪资', validators=[Optional()])
-
-
-class PrivacyQueryForm(FlaskForm):
-    """差分隐私查询表单"""
-    query_type = SelectField('查询类型', choices=[
-        ('count', '计数查询'),
-        ('mean', '均值查询'),
-        ('histogram', '直方图'),
-        ('variance', '方差查询')
-    ])
-    epsilon = FloatField('隐私预算(ε)', default=1.0, validators=[
-        DataRequired(message='请输入隐私预算')
-    ])
-    delta = FloatField('失败概率(δ)', default=1e-5, validators=[Optional()])
-
-
-class FileEncryptForm(FlaskForm):
-    """文件加密表单"""
-    file = FileField('选择文件', validators=[
-        DataRequired(message='请选择文件')
-    ])
-    encrypt_mode = SelectField('加密模式', choices=[
-        ('CBC', 'CBC模式（推荐）'),
-        ('CTR', 'CTR模式'),
-        ('ECB', 'ECB模式')
-    ])
 
 
 class SearchForm(FlaskForm):

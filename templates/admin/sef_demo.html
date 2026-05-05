@@ -1,0 +1,353 @@
+{% extends "base.html" %}
+
+{% block title %}SEF结构化加密演示 - 校园安全防护系统{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- 标题区 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fa fa-lock"></i> SM4结构化加密格式（SEF）— 创新功能演示</h4>
+                </div>
+                <div class="card-body">
+                    <p class="lead">
+                        <strong>Structured Encryption Format (SEF)</strong> 是本系统的核心创新：
+                        将敏感字段存储为<strong>单一结构化密文</strong>，密文内嵌脱敏信息，
+                        实现<strong>加密即脱敏</strong>——密文本身就是脱敏后的形态。
+                    </p>
+                    <div class="alert alert-info">
+                        <i class="fa fa-lightbulb-o"></i>
+                        <strong>创新点：</strong>传统方案同时存储明文和密文，脱敏在运行时对明文操作。
+                        SEF方案只存密文，脱敏直接从密文格式提取可见部分，全程零解密。
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEF格式说明 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fa fa-code"></i> SEF格式结构</h5>
+                </div>
+                <div class="card-body">
+                    <pre class="bg-dark text-light p-3 rounded"><code>SEF:v1:{type}:{visible_prefix}:{visible_suffix}:{hmac_token}:{encrypted_core}</code></pre>
+                    <div class="row mt-3">
+                        <div class="col-md-2">
+                            <div class="card bg-light">
+                                <div class="card-body text-center p-2">
+                                    <strong class="text-primary">SEF:v1</strong><br>
+                                    <small>版本标识</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card bg-light">
+                                <div class="card-body text-center p-2">
+                                    <strong class="text-success">{type}</strong><br>
+                                    <small>数据类型标签</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card bg-light">
+                                <div class="card-body text-center p-2">
+                                    <strong class="text-info">{prefix}</strong><br>
+                                    <small>可见前缀（明文）</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card bg-light">
+                                <div class="card-body text-center p-2">
+                                    <strong class="text-info">{suffix}</strong><br>
+                                    <small>可见后缀（明文）</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card bg-light">
+                                <div class="card-body text-center p-2">
+                                    <strong class="text-warning">{token}</strong><br>
+                                    <small>HMAC搜索令牌</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card bg-light">
+                                <div class="card-body text-center p-2">
+                                    <strong class="text-danger">{core}</strong><br>
+                                    <small>SM4加密核心</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 各类型示例 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fa fa-list"></i> 各数据类型SEF示例</h5>
+                </div>
+                <div class="card-body" id="demo-container">
+                    <div class="text-center">
+                        <i class="fa fa-spinner fa-spin"></i> 正在加载演示数据...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 对比：传统方案 vs SEF -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fa fa-times-circle"></i> 传统方案</h5>
+                </div>
+                <div class="card-body">
+                    <p>数据库存储：</p>
+                    <pre class="bg-dark text-light p-2 rounded"><code>name: "张三"              ← 明文（泄露风险！）
+name_encrypted: "Q0JDK..."  ← 密文（从未使用）</code></pre>
+                    <p class="mt-2">脱敏流程：</p>
+                    <ol>
+                        <li>读取明文 <code>"张三"</code></li>
+                        <li>运行时替换: <code>"张*"</code></li>
+                        <li>明文始终存在于数据库</li>
+                    </ol>
+                    <div class="alert alert-danger mb-0">
+                        <i class="fa fa-exclamation-triangle"></i>
+                        <strong>问题：</strong>明文列可被直接读取，加密形同虚设
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fa fa-check-circle"></i> SEF方案（本系统创新）</h5>
+                </div>
+                <div class="card-body">
+                    <p>数据库存储：</p>
+                    <pre class="bg-dark text-light p-2 rounded"><code>name_sef: "SEF:v1:name:张::a3f8:Q0JDK..."
+         ↑ 姓氏可见  ↑HMAC ↑加密核心</code></pre>
+                    <p class="mt-2">脱敏流程：</p>
+                    <ol>
+                        <li>读取SEF密文</li>
+                        <li>提取可见前缀: <code>"张"</code></li>
+                        <li>生成显示: <code>"张*"</code></li>
+                        <li><strong>全程零解密！</strong></li>
+                    </ol>
+                    <div class="alert alert-success mb-0">
+                        <i class="fa fa-shield"></i>
+                        <strong>优势：</strong>无明文存储，密文即脱敏，HMAC支持密文查询
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 密文查询演示 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fa fa-search"></i> 密文等值查询演示</h5>
+                </div>
+                <div class="card-body">
+                    <p>通过HMAC令牌实现"盲查询"——计算明文的HMAC，在数据库中匹配SEF记录的token字段，全程不接触明文。</p>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <select id="search-field" class="form-select mb-2">
+                                <option value="id_card">身份证号</option>
+                                <option value="phone">手机号</option>
+                                <option value="name">姓名</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" id="search-value" class="form-control mb-2" placeholder="输入查询值">
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-primary" onclick="doSefSearch()">
+                                <i class="fa fa-search"></i> 密文查询
+                            </button>
+                        </div>
+                    </div>
+                    <div id="search-result" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 迁移工具 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="fa fa-database"></i> 数据迁移工具</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h6><i class="fa fa-info-circle"></i> 什么是SEF迁移？</h6>
+                        <p class="mb-0">
+                            SEF迁移将数据库中现有的<strong>明文敏感数据</strong>转换为<strong>SEF结构化加密格式</strong>。
+                            迁移后，敏感字段将以密文形式存储，同时保留可见部分用于脱敏显示。
+                        </p>
+                    </div>
+
+                    <h6>迁移范围：</h6>
+                    <ul>
+                        <li><strong>学生表(students)：</strong>姓名、身份证号、手机号、邮箱、地址</li>
+                        <li><strong>教职工表(staff)：</strong>姓名、身份证号、手机号、邮箱、薪资</li>
+                    </ul>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">学生数据状态</h6>
+                                    <p class="mb-1">总记录数: <strong id="student-total">-</strong></p>
+                                    <p class="mb-1">已迁移: <strong id="student-migrated">-</strong></p>
+                                    <p class="mb-0 text-danger">待迁移: <strong id="student-pending">-</strong></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">教职工数据状态</h6>
+                                    <p class="mb-1">总记录数: <strong id="staff-total">-</strong></p>
+                                    <p class="mb-1">已迁移: <strong id="staff-migrated">-</strong></p>
+                                    <p class="mb-0 text-danger">待迁移: <strong id="staff-pending">-</strong></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="fa fa-exclamation-triangle"></i>
+                        <strong>注意：</strong>
+                        <ul class="mb-0">
+                            <li>此操作安全且可重复执行（只迁移SEF列为空的记录）</li>
+                            <li>迁移不会删除原始明文列，但系统将优先使用SEF格式</li>
+                            <li>迁移后可通过SEF实现零解密脱敏</li>
+                        </ul>
+                    </div>
+
+                    <form method="POST" action="{{ url_for('admin.migrate_sef') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-warning btn-lg" onclick="return confirm('确认执行SEF迁移？这将把所有未迁移的敏感数据转换为SEF格式。')">
+                            <i class="fa fa-refresh"></i> 执行SEF迁移
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 加载迁移状态统计
+function loadMigrationStatus() {
+    fetch('/api/sef/migration-status')
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                const status = data.data;
+                document.getElementById('student-total').textContent = status.students.total;
+                document.getElementById('student-migrated').textContent = status.students.migrated;
+                document.getElementById('student-pending').textContent = status.students.pending;
+                document.getElementById('staff-total').textContent = status.staff.total;
+                document.getElementById('staff-migrated').textContent = status.staff.migrated;
+                document.getElementById('staff-pending').textContent = status.staff.pending;
+            }
+        })
+        .catch(e => console.error('加载迁移状态失败:', e));
+}
+
+// 页面加载时执行
+loadMigrationStatus();
+// 加载SEF演示数据
+fetch('/api/sef/demo')
+    .then(r => r.json())
+    .then(data => {
+        if (!data.success) return;
+        const examples = data.data.examples;
+        const typeInfo = data.data.type_info;
+        let html = '<div class="table-responsive"><table class="table table-bordered table-hover">';
+        html += '<thead class="table-dark"><tr>';
+        html += '<th>数据类型</th><th>原始明文</th><th>可见前缀</th><th>可见后缀</th>';
+        html += '<th>HMAC令牌</th><th>脱敏显示</th><th>解密结果</th>';
+        html += '</tr></thead><tbody>';
+
+        for (const [type, info] of Object.entries(examples)) {
+            html += '<tr>';
+            html += `<td><span class="badge bg-primary">${type}</span><br><small class="text-muted">${typeInfo[type]?.description || ''}</small></td>`;
+            html += `<td><code>${info.original}</code></td>`;
+            html += `<td class="text-info"><code>${info.visible_prefix || '(无)'}</code></td>`;
+            html += `<td class="text-info"><code>${info.visible_suffix || '(无)'}</code></td>`;
+            html += `<td class="text-warning"><code>${info.hmac_token}</code></td>`;
+            html += `<td class="fw-bold text-success">${info.display}</td>`;
+            html += `<td><code>${info.decrypted}</code></td>`;
+            html += '</tr>';
+        }
+
+        html += '</tbody></table></div>';
+        document.getElementById('demo-container').innerHTML = html;
+    })
+    .catch(e => {
+        document.getElementById('demo-container').innerHTML =
+            '<div class="alert alert-danger">加载失败: ' + e.message + '</div>';
+    });
+
+// SEF密文查询
+function doSefSearch() {
+    const field = document.getElementById('search-field').value;
+    const value = document.getElementById('search-value').value;
+    if (!value) {
+        alert('请输入查询值');
+        return;
+    }
+
+    document.getElementById('search-result').innerHTML = '<i class="fa fa-spinner fa-spin"></i> 查询中...';
+
+    fetch(`/api/sef/search?field=${field}&value=${encodeURIComponent(value)}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                const d = data.data;
+                let html = '<div class="alert alert-success">';
+                html += `<p><strong>查询字段：</strong>${d.search_field}</p>`;
+                html += `<p><strong>HMAC搜索令牌：</strong><code>${d.search_token}</code></p>`;
+                html += `<p><strong>匹配记录数：</strong>${d.match_count}</p>`;
+                if (d.results.length > 0) {
+                    html += '<table class="table table-sm"><thead><tr><th>ID</th><th>学号</th><th>姓名</th><th>院系</th></tr></thead><tbody>';
+                    d.results.forEach(r => {
+                        html += `<tr><td>${r.id}</td><td>${r.student_id}</td><td>${r.name}</td><td>${r.department}</td></tr>`;
+                    });
+                    html += '</tbody></table>';
+                }
+                html += `<p class="mb-0"><small class="text-muted">${d.note}</small></p>`;
+                html += '</div>';
+                document.getElementById('search-result').innerHTML = html;
+            } else {
+                document.getElementById('search-result').innerHTML =
+                    `<div class="alert alert-danger">${data.error}</div>`;
+            }
+        })
+        .catch(e => {
+            document.getElementById('search-result').innerHTML =
+                `<div class="alert alert-danger">查询失败: ${e.message}</div>`;
+        });
+}
+</script>
+{% endblock %}

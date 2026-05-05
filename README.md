@@ -54,6 +54,15 @@
 - 仪表盘统计与Chart.js图表（登录趋势、数据访问分布）
 - RESTful API接口
 
+### 8. SEF结构化加密格式（核心创新）
+- **加密即脱敏**：密文格式内嵌脱敏规则，无需额外处理
+- **零解密脱敏**：直接从密文生成脱敏文本，不解密任何数据
+- **密文等值查询**：HMAC令牌支持在加密数据上进行等值查询
+- **SEF自加密文件**：文件自包含加密元数据、访问策略和完整性校验
+- **渐进式解密**：支持预览和完全解密两级访问
+- **文件级访问控制**：基于策略的细粒度权限检查
+- 支持7种敏感数据类型：身份证、手机号、邮箱、姓名、地址、薪资、银行卡
+
 ## 安装部署
 
 ### 环境要求
@@ -114,8 +123,6 @@ campus_security_system/
 ├── run.py                  # CLI启动脚本
 ├── README.md               # 项目文档
 ├── requirements.txt        # 依赖列表
-├── login_page.html         # 独立登录页面
-├── cookies.txt             # Cookie数据文件
 │
 ├── core/                   # 核心安全模块
 │   ├── __init__.py         # 包导出
@@ -125,24 +132,26 @@ campus_security_system/
 │   ├── encryption.py       # SM4加密（ECB/CBC/CTR, 字段加密, 文件加密）
 │   ├── privacy.py          # 差分隐私（Laplace/Gaussian/指数机制, 预算追踪）
 │   ├── masking.py          # 数据脱敏（6策略, 10+数据类型, 角色策略引擎）
-│   └── audit.py            # 审计日志（30+事件类型, 风险等级, 安全事件分析）
+│   ├── audit.py            # 审计日志（30+事件类型, 风险等级, 安全事件分析）
+│   ├── structured_token.py # 结构化加密令牌（SEF核心）
+│   └── sef_file.py         # SEF自加密文件格式
 │
 ├── app/                    # Flask应用包
-│   ├── __init__.py
 │   └── routes/             # 路由模块
 │       ├── __init__.py
 │       ├── auth.py         # 认证路由（登录、登出、改密、个人信息）
 │       ├── main.py         # 主页路由（仪表盘、搜索、图表API）
 │       ├── admin.py        # 管理路由（用户/角色/权限/安全事件/系统设置）
 │       ├── data.py         # 数据路由（学生/教职工CRUD、隐私查询、文件加密、导出）
-│       └── api.py          # RESTful API（用户/统计/审计/隐私/脱敏/健康检查）
+│       ├── api.py          # RESTful API（用户/统计/审计/隐私/脱敏/健康检查）
+│       └── sef_api.py      # SEF文件加密API（加密、解密、预览、信息查询）
 │
 ├── utils/                  # 工具模块
 │   ├── __init__.py         # 包导出
 │   ├── config.py           # 配置管理（开发/生产/测试环境配置）
 │   ├── logger.py           # 日志配置（文件轮转 + 控制台输出）
-│   ├── forms.py            # WTForms表单定义（登录、改密、用户、学生、教职工等）
-│   └── helpers.py          # 辅助函数（测试数据生成、校验、CSV导出、分页）
+│   ├── forms.py            # WTForms表单定义（登录、改密、用户、学生、搜索）
+│   └── helpers.py          # 辅助函数（测试数据生成、校验、分页）
 │
 ├── templates/              # Jinja2 HTML模板
 │   ├── base.html           # 基础布局（Bootstrap 5, Font Awesome, 响应式导航）
@@ -208,6 +217,10 @@ campus_security_system/
 | `/api/masking/demo` | GET | 脱敏演示 |
 | `/api/chart/login-trend` | GET | 登录趋势图表数据 |
 | `/api/chart/access-distribution` | GET | 访问分布图表数据 |
+| `/api/sef/encrypt` | POST | SEF文件加密 |
+| `/api/sef/decrypt` | POST | SEF文件解密 |
+| `/api/sef/preview` | POST | SEF文件预览 |
+| `/api/sef/info` | POST | SEF文件信息查询 |
 
 ## 核心功能演示
 
@@ -341,7 +354,7 @@ print(masker.mask_ip_address("192.168.1.100"))         # 192.168.1.*
 
 ## 开发团队
 
-挑战杯参赛团队 - 网络安全赛道
+数据安全课程设计
 
 ## 许可证
 
@@ -349,4 +362,4 @@ print(masker.mask_ip_address("192.168.1.100"))         # 192.168.1.*
 
 ---
 
-© 2024 挑战杯参赛团队 | 网络安全赛道
+© 2026 数据安全课程设计

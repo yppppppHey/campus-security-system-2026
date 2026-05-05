@@ -702,3 +702,113 @@ def export_students():
         download_name=f'students_{datetime.now().strftime("%Y%m%d")}.csv',
         mimetype='text/csv'
     )
+
+
+# ==================== SEF自加密文件演示 ====================
+
+@data_bp.route('/sef-demo')
+def sef_demo():
+    """SEF自加密文件格式演示页面（公开访问）"""
+    from core.structured_token import StructuredToken, get_sef_type_info
+    from core.sef_file import SEFContentType, SEFAlgorithm
+
+    encryptor = get_encryptor()
+    token = StructuredToken(encryptor)
+
+    # 演示数据
+    demo_data = [
+        ('320102199001011234', 'id_card', '身份证号'),
+        ('13812345678', 'phone', '手机号'),
+        ('zhangsan@example.com', 'email', '邮箱'),
+        ('张三', 'name', '姓名'),
+        ('江苏省南京市鼓楼区北京东路1号', 'address', '地址'),
+        ('15000', 'salary', '薪资'),
+        ('6222021234567890123', 'bank_card', '银行卡号'),
+    ]
+
+    results = []
+    for plaintext, data_type, label in demo_data:
+        try:
+            sef = token.encode(plaintext, data_type)
+            display = token.to_display(sef)
+            decrypted = token.decode_full(sef)
+            search_token = token.compute_search_token(plaintext)
+
+            results.append({
+                'label': label,
+                'plaintext': plaintext,
+                'sef_format': sef,
+                'sef_length': len(sef),
+                'masked_display': display,
+                'decrypted': decrypted,
+                'search_token': search_token,
+                'match': decrypted == plaintext,
+            })
+        except Exception as e:
+            results.append({
+                'label': label,
+                'plaintext': plaintext,
+                'error': str(e),
+            })
+
+    type_info = get_sef_type_info()
+    content_types = SEFContentType.NAMES
+    algorithms = SEFAlgorithm.NAMES
+
+    return render_template('data/sef_file_demo.html',
+                           results=results,
+                           type_info=type_info,
+                           content_types=content_types,
+                           algorithms=algorithms)
+
+
+@data_bp.route('/sef-token-demo')
+@login_required
+def sef_token_demo():
+    """SEF结构化令牌演示API"""
+    from core.structured_token import StructuredToken, get_sef_type_info
+
+    encryptor = get_encryptor()
+    token = StructuredToken(encryptor)
+
+    # 演示数据
+    demo_data = [
+        ('320102199001011234', 'id_card', '身份证号'),
+        ('13812345678', 'phone', '手机号'),
+        ('zhangsan@example.com', 'email', '邮箱'),
+        ('张三', 'name', '姓名'),
+        ('江苏省南京市鼓楼区北京东路1号', 'address', '地址'),
+        ('15000', 'salary', '薪资'),
+        ('6222021234567890123', 'bank_card', '银行卡号'),
+    ]
+
+    results = []
+    for plaintext, data_type, label in demo_data:
+        try:
+            sef = token.encode(plaintext, data_type)
+            display = token.to_display(sef)
+            decrypted = token.decode_full(sef)
+            search_token = token.compute_search_token(plaintext)
+
+            results.append({
+                'label': label,
+                'plaintext': plaintext,
+                'sef_format': sef,
+                'sef_length': len(sef),
+                'masked_display': display,
+                'decrypted': decrypted,
+                'search_token': search_token,
+                'match': decrypted == plaintext,
+            })
+        except Exception as e:
+            results.append({
+                'label': label,
+                'plaintext': plaintext,
+                'error': str(e),
+            })
+
+    return jsonify({
+        'success': True,
+        'results': results,
+        'type_info': get_sef_type_info()
+    })

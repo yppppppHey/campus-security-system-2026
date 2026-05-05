@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,6 +13,7 @@
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
@@ -19,37 +21,45 @@
             align-items: center;
             justify-content: center;
         }
+
         .login-container {
             max-width: 450px;
             width: 100%;
             padding: 20px;
         }
+
         .login-card {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
             overflow: hidden;
         }
+
         .login-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 30px;
             text-align: center;
         }
+
         .login-header h3 {
             margin: 0;
             font-weight: 600;
         }
+
         .login-header p {
             margin: 10px 0 0;
             opacity: 0.9;
         }
+
         .login-body {
             padding: 30px;
         }
+
         .form-floating {
             margin-bottom: 20px;
         }
+
         .btn-login {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
@@ -57,10 +67,12 @@
             font-size: 16px;
             font-weight: 600;
         }
+
         .btn-login:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
         }
+
         .test-accounts {
             background: #f8f9fa;
             border-radius: 10px;
@@ -68,170 +80,181 @@
             margin-top: 20px;
             font-size: 13px;
         }
+
         .test-accounts h6 {
             color: #6c757d;
             margin-bottom: 10px;
         }
+
         .test-accounts .account {
             padding: 5px 0;
             border-bottom: 1px dashed #dee2e6;
         }
+
         .test-accounts .account:last-child {
             border-bottom: none;
         }
+
         .footer {
             text-align: center;
             margin-top: 20px;
             color: white;
         }
+
         .alert {
             margin-bottom: 20px;
             font-size: 14px;
         }
+
         .alert-warning {
             background-color: #fff3cd;
             border-color: #ffc107;
             color: #856404;
         }
+
         .alert-danger {
             background-color: #f8d7da;
             border-color: #f5c6cb;
             color: #721c24;
         }
+
         .alert i {
             margin-right: 8px;
         }
     </style>
 </head>
+
 <body>
-<div class="login-container">
-    <div class="login-card">
-        <div class="login-header">
-            <i class="fa fa-shield fa-3x mb-3"></i>
-            <h3>校园安全防护系统</h3>
-            <p>多源敏感数据一体化安全防护平台</p>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <i class="fa fa-shield fa-3x mb-3"></i>
+                <h3>校园安全防护系统</h3>
+                <p>多源敏感数据一体化安全防护平台</p>
+            </div>
+            <div class="login-body">
+                <!-- 登录错误信息 -->
+                {% if error_message %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fa fa-times-circle"></i>
+                    <strong>登录失败:</strong> {{ error_message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endif %}
+
+                <!-- 账户锁定警告 -->
+                {% if login_info and login_info.locked %}
+                <div class="alert alert-danger fade show" role="alert" style="border-left: 4px solid #dc3545;">
+                    <i class="fa fa-lock"></i>
+                    <strong>账户已锁定!</strong><br>
+                    用户 <code>{{ login_info.username }}</code> 因密码错误次数过多已被锁定。<br>
+                    <span style="font-size: 16px; font-weight: bold;">请等待 <span class="text-danger">{{
+                            login_info.remaining_minutes }} 分钟</span> 后再尝试登录。</span>
+                </div>
+                {% elif login_info and login_info.attempts > 0 %}
+                <div class="alert alert-warning fade show" role="alert" style="border-left: 4px solid #ffc107;">
+                    <i class="fa fa-warning"></i>
+                    <strong>登录失败提醒:</strong><br>
+                    用户 <code>{{ login_info.username }}</code> 已连续失败 <strong class="text-warning">{{ login_info.attempts
+                        }} 次</strong>。<br>
+                    剩余 <strong class="text-danger">{{ login_info.remaining_attempts }} 次</strong> 尝试机会，超过限制将锁定账户30分钟。
+                </div>
+                {% endif %}
+
+                <!-- 动态登录状态提示 -->
+                <div id="loginStatus"></div>
+
+                <form method="POST" action="{{ url_for('auth.login') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="username" name="username" placeholder="用户名" required
+                            autofocus value="{{ username or '' }}">
+                        <label for="username"><i class="fa fa-user"></i> 用户名</label>
+                    </div>
+
+                    <div class="form-floating">
+                        <input type="password" class="form-control" id="password" name="password" placeholder="密码"
+                            required>
+                        <label for="password"><i class="fa fa-lock"></i> 密码</label>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                        <label class="form-check-label" for="remember">记住我</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-login w-100">
+                        <i class="fa fa-sign-in"></i> 登 录
+                    </button>
+                </form>
+
+                <!-- 测试账号信息 -->
+                <div class="test-accounts">
+                    <h6><i class="fa fa-info-circle"></i> 测试账号</h6>
+                    <div class="account">
+                        <strong>管理员:</strong> admin / Admin@123
+                    </div>
+                    <div class="account">
+                        <strong>安全员:</strong> security / Security@123
+                    </div>
+                    <div class="account">
+                        <strong>审计员:</strong> auditor / Auditor@123
+                    </div>
+                    <div class="account">
+                        <strong>普通用户:</strong> user / User@123
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="login-body">
-            <!-- 登录错误信息 -->
-            {% if error_message %}
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="fa fa-times-circle"></i>
-                <strong>登录失败:</strong> {{ error_message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            {% endif %}
 
-            <!-- 账户锁定警告 -->
-            {% if login_info and login_info.locked %}
-            <div class="alert alert-danger fade show" role="alert" style="border-left: 4px solid #dc3545;">
-                <i class="fa fa-lock"></i>
-                <strong>账户已锁定!</strong><br>
-                用户 <code>{{ login_info.username }}</code> 因密码错误次数过多已被锁定。<br>
-                <span style="font-size: 16px; font-weight: bold;">请等待 <span class="text-danger">{{ login_info.remaining_minutes }} 分钟</span> 后再尝试登录。</span>
-            </div>
-            {% elif login_info and login_info.attempts > 0 %}
-            <div class="alert alert-warning fade show" role="alert" style="border-left: 4px solid #ffc107;">
-                <i class="fa fa-warning"></i>
-                <strong>登录失败提醒:</strong><br>
-                用户 <code>{{ login_info.username }}</code> 已连续失败 <strong class="text-warning">{{ login_info.attempts }} 次</strong>。<br>
-                剩余 <strong class="text-danger">{{ login_info.remaining_attempts }} 次</strong> 尝试机会，超过限制将锁定账户30分钟。
-            </div>
-            {% endif %}
-
-            <!-- 动态登录状态提示 -->
-            <div id="loginStatus"></div>
-
-            <form method="POST" action="{{ url_for('auth.login') }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-                <div class="form-floating">
-                    <input type="text" class="form-control" id="username" name="username"
-                           placeholder="用户名" required autofocus
-                           value="{{ username or '' }}">
-                    <label for="username"><i class="fa fa-user"></i> 用户名</label>
-                </div>
-
-                <div class="form-floating">
-                    <input type="password" class="form-control" id="password" name="password"
-                           placeholder="密码" required>
-                    <label for="password"><i class="fa fa-lock"></i> 密码</label>
-                </div>
-
-                <div class="form-check mb-3">
-                    <input type="checkbox" class="form-check-input" id="remember" name="remember">
-                    <label class="form-check-label" for="remember">记住我</label>
-                </div>
-
-                <button type="submit" class="btn btn-primary btn-login w-100">
-                    <i class="fa fa-sign-in"></i> 登 录
-                </button>
-            </form>
-
-            <!-- 测试账号信息 -->
-            <div class="test-accounts">
-                <h6><i class="fa fa-info-circle"></i> 测试账号</h6>
-                <div class="account">
-                    <strong>管理员:</strong> admin / Admin@123
-                </div>
-                <div class="account">
-                    <strong>安全员:</strong> security / Security@123
-                </div>
-                <div class="account">
-                    <strong>审计员:</strong> auditor / Auditor@123
-                </div>
-                <div class="account">
-                    <strong>普通用户:</strong> user / User@123
-                </div>
-            </div>
+        <div class="footer">
+            <small>校园多源敏感数据一体化安全防护系统 v1.0.0</small><br>
+            <small>© 2026 数据安全课程设计</small>
         </div>
     </div>
 
-    <div class="footer">
-        <small>校园多源敏感数据一体化安全防护系统 v1.0.0</small><br>
-        <small>© 2024 挑战杯参赛团队 | 挑战杯网络安全赛道</small>
-    </div>
-</div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 动态检查用户登录状态
+        document.getElementById('username').addEventListener('blur', function () {
+            const username = this.value.trim();
+            const statusDiv = document.getElementById('loginStatus');
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-// 动态检查用户登录状态
-document.getElementById('username').addEventListener('blur', function() {
-    const username = this.value.trim();
-    const statusDiv = document.getElementById('loginStatus');
-
-    if (!username) {
-        statusDiv.innerHTML = '';
-        return;
-    }
-
-    // 发送请求检查登录状态
-    fetch('/auth/api/check-login-status?username=' + encodeURIComponent(username))
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.has_warning) {
-                let html = '<div class="alert ' + (data.locked ? 'alert-danger' : 'alert-warning') + '" role="alert">';
-                html += '<i class="fa fa-' + (data.locked ? 'lock' : 'warning') + '"></i> ';
-
-                if (data.locked) {
-                    html += '<strong>账户已锁定!</strong><br>';
-                    html += '用户 <code>' + data.username + '</code> 因连续登录失败已被锁定。<br>';
-                    html += '请等待 <strong>' + data.remaining_minutes + ' 分钟</strong> 后再尝试登录。';
-                } else {
-                    html += '<strong>登录失败提醒:</strong><br>';
-                    html += '用户 <code>' + data.username + '</code> 已连续失败 <strong>' + data.attempts + ' 次</strong>。<br>';
-                    html += '剩余 <strong>' + data.remaining_attempts + ' 次</strong> 尝试机会，超过限制将锁定账户30分钟。';
-                }
-
-                html += '</div>';
-                statusDiv.innerHTML = html;
-            } else {
+            if (!username) {
                 statusDiv.innerHTML = '';
+                return;
             }
-        })
-        .catch(error => {
-            console.error('检查登录状态失败:', error);
+
+            // 发送请求检查登录状态
+            fetch('/auth/api/check-login-status?username=' + encodeURIComponent(username))
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.has_warning) {
+                        let html = '<div class="alert ' + (data.locked ? 'alert-danger' : 'alert-warning') + '" role="alert">';
+                        html += '<i class="fa fa-' + (data.locked ? 'lock' : 'warning') + '"></i> ';
+
+                        if (data.locked) {
+                            html += '<strong>账户已锁定!</strong><br>';
+                            html += '用户 <code>' + data.username + '</code> 因连续登录失败已被锁定。<br>';
+                            html += '请等待 <strong>' + data.remaining_minutes + ' 分钟</strong> 后再尝试登录。';
+                        } else {
+                            html += '<strong>登录失败提醒:</strong><br>';
+                            html += '用户 <code>' + data.username + '</code> 已连续失败 <strong>' + data.attempts + ' 次</strong>。<br>';
+                            html += '剩余 <strong>' + data.remaining_attempts + ' 次</strong> 尝试机会，超过限制将锁定账户30分钟。';
+                        }
+
+                        html += '</div>';
+                        statusDiv.innerHTML = html;
+                    } else {
+                        statusDiv.innerHTML = '';
+                    }
+                })
+                .catch(error => {
+                    console.error('检查登录状态失败:', error);
+                });
         });
-});
-</script>
+    </script>
 </body>
+
 </html>

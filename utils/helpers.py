@@ -5,15 +5,13 @@
 提供各种辅助功能
 """
 
-import os
 import random
 import string
-import json
-import hashlib
-from datetime import datetime, date
-from typing import Any, Dict, List, Optional
 import csv
 import io
+import re
+from datetime import datetime, date
+from typing import Any, Dict, List
 
 
 def generate_test_data():
@@ -63,14 +61,13 @@ def generate_test_data():
 
     # 生成学生数据
     students = []
-    # 用于存储已生成的学生ID，确保唯一性
     used_ids = set()
 
     for i in range(200):
         dept = random.choice(departments)
         major = random.choice(majors[dept])
         year = random.randint(2020, 2023)
-    
+
         # 生成唯一的学生ID
         while True:
             student_id = f"{year}{random.randint(1000, 9999)}"
@@ -192,21 +189,11 @@ def generate_test_data():
         )
 
     print(f"已生成 {len(staff_list)} 条教职工数据")
-
     print("测试数据生成完成！")
 
 
 def format_datetime(value: datetime, format: str = '%Y-%m-%d %H:%M:%S') -> str:
-    """
-    格式化日期时间
-
-    Args:
-        value: 日期时间值
-        format: 格式字符串
-
-    Returns:
-        str: 格式化后的字符串
-    """
+    """格式化日期时间"""
     if value is None:
         return ''
     if isinstance(value, str):
@@ -215,16 +202,7 @@ def format_datetime(value: datetime, format: str = '%Y-%m-%d %H:%M:%S') -> str:
 
 
 def format_date(value: date, format: str = '%Y-%m-%d') -> str:
-    """
-    格式化日期
-
-    Args:
-        value: 日期值
-        format: 格式字符串
-
-    Returns:
-        str: 格式化后的字符串
-    """
+    """格式化日期"""
     if value is None:
         return ''
     if isinstance(value, str):
@@ -233,66 +211,22 @@ def format_date(value: date, format: str = '%Y-%m-%d') -> str:
 
 
 def generate_random_string(length: int = 16) -> str:
-    """
-    生成随机字符串
-
-    Args:
-        length: 字符串长度
-
-    Returns:
-        str: 随机字符串
-    """
+    """生成随机字符串"""
     chars = string.ascii_letters + string.digits
     return ''.join(random.choice(chars) for _ in range(length))
 
 
-def calculate_md5(data: str) -> str:
-    """
-    计算MD5哈希值
-
-    Args:
-        data: 原始数据
-
-    Returns:
-        str: MD5哈希值
-    """
-    return hashlib.md5(data.encode()).hexdigest()
-
-
-def calculate_sha256(data: str) -> str:
-    """
-    计算SHA256哈希值
-
-    Args:
-        data: 原始数据
-
-    Returns:
-        str: SHA256哈希值
-    """
-    return hashlib.sha256(data.encode()).hexdigest()
-
-
 def validate_id_card(id_card: str) -> bool:
-    """
-    验证身份证号格式
-
-    Args:
-        id_card: 身份证号
-
-    Returns:
-        bool: 是否有效
-    """
+    """验证身份证号格式"""
     if not id_card:
         return False
 
     if len(id_card) == 18:
-        # 18位身份证
         if not id_card[:-1].isdigit():
             return False
         if id_card[-1] not in '0123456789X':
             return False
 
-        # 校验码验证
         weights = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2]
         check_codes = '10X98765432'
 
@@ -303,103 +237,28 @@ def validate_id_card(id_card: str) -> bool:
         return True
 
     elif len(id_card) == 15:
-        # 15位身份证
         return id_card.isdigit()
 
     return False
 
 
 def validate_phone(phone: str) -> bool:
-    """
-    验证手机号格式
-
-    Args:
-        phone: 手机号
-
-    Returns:
-        bool: 是否有效
-    """
+    """验证手机号格式"""
     if not phone or len(phone) != 11:
         return False
     return phone.startswith('1') and phone.isdigit()
 
 
 def validate_email(email: str) -> bool:
-    """
-    验证邮箱格式
-
-    Args:
-        email: 邮箱地址
-
-    Returns:
-        bool: 是否有效
-    """
-    import re
+    """验证邮箱格式"""
+    if not email:
+        return False
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return bool(re.match(pattern, email))
 
 
-def export_to_csv(data: List[Dict], filename: str, fields: List[str] = None) -> str:
-    """
-    导出数据到CSV
-
-    Args:
-        data: 数据列表
-        filename: 文件名
-        fields: 字段列表
-
-    Returns:
-        str: CSV内容
-    """
-    if not data:
-        return ''
-
-    output = io.StringIO()
-    writer = csv.writer(output)
-
-    # 写入表头
-    if fields:
-        writer.writerow(fields)
-    else:
-        writer.writerow(data[0].keys())
-
-    # 写入数据
-    for row in data:
-        if fields:
-            writer.writerow([row.get(f, '') for f in fields])
-        else:
-            writer.writerow(row.values())
-
-    return output.getvalue()
-
-
-def parse_csv_to_dict(csv_content: str) -> List[Dict]:
-    """
-    解析CSV内容为字典列表
-
-    Args:
-        csv_content: CSV内容
-
-    Returns:
-        List[Dict]: 字典列表
-    """
-    result = []
-    reader = csv.DictReader(io.StringIO(csv_content))
-    for row in reader:
-        result.append(dict(row))
-    return result
-
-
 def get_client_ip(request) -> str:
-    """
-    获取客户端IP地址
-
-    Args:
-        request: Flask请求对象
-
-    Returns:
-        str: IP地址
-    """
+    """获取客户端IP地址"""
     if request.headers.get('X-Forwarded-For'):
         return request.headers.get('X-Forwarded-For').split(',')[0].strip()
     elif request.headers.get('X-Real-IP'):
@@ -409,17 +268,7 @@ def get_client_ip(request) -> str:
 
 
 def paginate(data: List, page: int, per_page: int) -> Dict:
-    """
-    分页处理
-
-    Args:
-        data: 数据列表
-        page: 页码
-        per_page: 每页数量
-
-    Returns:
-        Dict: 分页结果
-    """
+    """分页处理"""
     total = len(data)
     start = (page - 1) * per_page
     end = start + per_page
@@ -431,75 +280,3 @@ def paginate(data: List, page: int, per_page: int) -> Dict:
         'per_page': per_page,
         'pages': (total + per_page - 1) // per_page
     }
-
-
-def safe_int(value: Any, default: int = 0) -> int:
-    """
-    安全转换为整数
-
-    Args:
-        value: 值
-        default: 默认值
-
-    Returns:
-        int: 整数值
-    """
-    try:
-        return int(value)
-    except (ValueError, TypeError):
-        return default
-
-
-def safe_float(value: Any, default: float = 0.0) -> float:
-    """
-    安全转换为浮点数
-
-    Args:
-        value: 值
-        default: 默认值
-
-    Returns:
-        float: 浮点数值
-    """
-    try:
-        return float(value)
-    except (ValueError, TypeError):
-        return default
-
-
-def truncate_string(s: str, length: int = 50, suffix: str = '...') -> str:
-    """
-    截断字符串
-
-    Args:
-        s: 原字符串
-        length: 最大长度
-        suffix: 后缀
-
-    Returns:
-        str: 截断后的字符串
-    """
-    if not s or len(s) <= length:
-        return s
-    return s[:length - len(suffix)] + suffix
-
-
-if __name__ == '__main__':
-    # 测试辅助函数
-    print("测试辅助函数")
-
-    # 测试身份证验证
-    print(f"身份证验证: {validate_id_card('320102199001011234')}")
-
-    # 测试手机号验证
-    print(f"手机号验证: {validate_phone('13812345678')}")
-
-    # 测试邮箱验证
-    print(f"邮箱验证: {validate_email('test@example.com')}")
-
-    # 测试随机字符串
-    print(f"随机字符串: {generate_random_string(16)}")
-
-    # 测试哈希
-    print(f"MD5: {calculate_md5('hello')}")
-    print(f"SHA256: {calculate_sha256('hello')}")

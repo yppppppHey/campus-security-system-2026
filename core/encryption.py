@@ -478,6 +478,45 @@ class SM4Encryptor:
 
         return plaintext.decode('utf-8')
 
+    def encrypt_core(self, plaintext: Union[str, bytes]) -> str:
+        """
+        加密核心数据（用于SEF结构化令牌）
+
+        使用CBC模式，返回Base64编码的密文
+
+        Args:
+            plaintext: 明文
+
+        Returns:
+            str: Base64编码的密文（包含IV）
+        """
+        if isinstance(plaintext, str):
+            plaintext = plaintext.encode('utf-8')
+
+        ciphertext, iv = self.encrypt_cbc(plaintext)
+        # 将IV和密文一起编码
+        result = iv + ciphertext
+        return base64.b64encode(result).decode('ascii')
+
+    def decrypt_core(self, ciphertext: str) -> str:
+        """
+        解密核心数据（用于SEF结构化令牌）
+
+        Args:
+            ciphertext: Base64编码的密文（包含IV）
+
+        Returns:
+            str: 明文
+        """
+        data = base64.b64decode(ciphertext)
+
+        # IV在前16字节，密文在后
+        iv = data[:16]
+        encrypted = data[16:]
+
+        plaintext = self.decrypt_cbc(encrypted, iv)
+        return plaintext.decode('utf-8')
+
     def encrypt_file(self, input_path: str, output_path: str,
                      mode: str = MODE_CBC) -> Tuple[bool, str]:
         """

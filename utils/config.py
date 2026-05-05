@@ -33,6 +33,7 @@ class Config:
 
     # CSRF配置
     WTF_CSRF_ENABLED = True
+    WTF_CSRF_CHECK_DEFAULT = False  # 禁用自动CSRF检查，手动验证
     WTF_CSRF_TIME_LIMIT = 3600  # 1小时，单位为秒
 
     # 文件上传配置
